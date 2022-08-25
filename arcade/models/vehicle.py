@@ -18,8 +18,8 @@ class BaseModel(PydanicBaseModel):
 
 class OriginModelType(BaseModel):
     TM: ClassVar[TransformManager] = TransformManager()
-    UID: ClassVar[set[str]] = set()
-    uid: str
+    UID: ClassVar[set[UidType]] = set()
+    uid: UidType
 
     @validator('uid')
     def uid_is_unique(cls, uid):
@@ -83,7 +83,7 @@ class TransformationType(BaseModel):
 
 
 class ModelType(OriginModelType):
-    parent: str
+    parent: UidType
     transformation: TransformationType | None = Field(
         default_factory=TransformationType
     )
