@@ -1,5 +1,5 @@
-from arcade.models.base import ModelType
+from arcade.models.base import SpatialModelType
 
 
-class FuselageType(ModelType):
+class FuselageType(SpatialModelType):
     pass

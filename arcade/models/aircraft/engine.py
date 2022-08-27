@@ -1,6 +1,6 @@
 from ast import Mod
-from arcade.models.base import ModelType
+from arcade.models.base import SpatialModelType
 
 
-class EnginePositionType(ModelType):
+class EnginePositionType(SpatialModelType):
     pass

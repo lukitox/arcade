@@ -61,7 +61,7 @@ class OriginModelType(BaseModel, ABC):
         raise ValueError(f'UID "{uid}" is already assigned to another object.')
 
 
-class ModelType(OriginModelType):
+class SpatialModelType(OriginModelType):
     """Abstract type for all models from the second hierarchy level on (below
     :class:`OriginModelType`).
 
