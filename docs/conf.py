@@ -37,6 +37,22 @@ extensions = [
     'sphinxcontrib.autodoc_pydantic',
 ]
 
+# Autodoc options
+autodoc_default_options = {
+    'member-order': 'bysource',
+    'inherited-members': True,
+    'show-inheritance': True,
+    'undoc-members': True,
+    'exclude-members': (
+        'construct, copy, dict, from_orm, json, parse_file, parse_obj, '
+        + 'parse_raw, schema, schema_json, update_forward_refs, validate'
+    ),
+}
+
+# autodoc-pydantic options
+autodoc_pydantic_model_show_config_summary = False
+autodoc_pydantic_model_hide_paramlist = False
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
@@ -68,7 +84,7 @@ release = arcade.__version__
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -98,7 +114,7 @@ html_theme = 'sphinx_rtd_theme'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+# html_static_path = ['_static']
 
 
 # -- Options for HTMLHelp output ---------------------------------------

@@ -10,25 +10,11 @@ from arcade.models.types import BaseModel, UidType
 
 
 class AbstractModelType(BaseModel, ABC):
-    """Abstract model type.
-
-    Parameters
-    ----------
-    UID : ClassVar of type set of UidType
-        Set of all given uid's, used to validate that no uid is used more than
-        once.
-    uid : UidType
-        Unique identifier.
-    name : str, optional
-        The object's name, by default `None`.
-    description : str, optional
-        Some description string for the object, by default `None`.
-
-    """
+    """Abstract model type."""
     UID: ClassVar[dict[UidType, ref]] = dict()
-    uid: UidType
-    name: str | None = None
-    description: str | None = None
+    uid: UidType = Field(..., description="Unique identifier.")
+    name: str | None = Field(description="The object's name.")
+    description: str | None = Field(description="Some description string.")
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
@@ -36,13 +22,7 @@ class AbstractModelType(BaseModel, ABC):
 
     @validator('uid')
     def uid_is_unique(cls, uid):
-        """Ensures that the entered uid is not already taken.
-
-        Raises
-        ------
-        ValueError
-            If the uid is already assigned to another object.
-        """
+        """Ensures that the entered uid is not already taken."""
         if not uid in cls.UID:  # new object
             return uid
         if cls.UID[uid]() is None:  # key exists, but value is dead weakref
@@ -59,17 +39,6 @@ class OriginModelType(AbstractModelType):
     the object provididing the global coordinate system. Therefore it has no
     further dependenices on other types.
 
-    Parameters
-    ----------
-    TM : ClassVar of type TransformManager
-        The transform manager of an arcade model. Every child instance of this
-        class registers it's own local COS relative so some other COS in the
-        transform manager.
-        It can then provide transformation matrices between all of the
-        registered local coordinate systems.
-        Because it's a class variable, it can be accessed from every child
-        instance.
-
     """
     TM: ClassVar[TransformManager] = TransformManager()
 
@@ -78,22 +47,22 @@ class SpatialModelType(OriginModelType, ModelType):
     """Abstract type for all models from the second hierarchy level on (below
     :class:`OriginModelType`).
 
-    Parameters
-    ----------
-    parent : UidType
-        Uid of the object this one's coordinate system depends on. The
-        corresponding transformation is assigned to the `transformation`
-        attribute.
-    transformation : TransformationType, optional
-        Transform from the parent coordinate system to this object's local
-        coordinate system.
-        The default value corresponds to a transformation without translation,
-        rotation or scaling.
-
     """
-    parent: UidType
+    parent: UidType = Field(
+        ...,
+        description=(
+            "Uid of the object this one's coordinate system depends on. The "
+            + "corresponding transformation is assigned to the `transformation`"
+            + " attribute."
+        ),
+    )
     transformation: TransformationType | None = Field(
-        default_factory=TransformationType
+        default_factory=TransformationType,
+        description=(
+            "Transform from the parent coordinate system to this object's "
+            + "local coordinate system. The default value corresponds to a "
+            + "transformation without translation, rotation or scaling."
+        )
     )
 
     def __init__(self, **data) -> None:
@@ -109,13 +78,7 @@ class SpatialModelType(OriginModelType, ModelType):
 
     @validator('parent')
     def parent_exists(cls, parent):
-        """Ensures that the parent object exists.
-
-        Raises
-        ------
-        ValueError
-            If the entered parent uid was not assigned to any object.
-        """
+        """Ensures that the parent object exists."""
         if parent in cls.UID:
             return parent
         raise ValueError(f'Parent uid "{parent}" does not exist.')

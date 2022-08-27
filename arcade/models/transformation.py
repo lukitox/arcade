@@ -3,30 +3,32 @@ from typing import ClassVar
 import numpy as np
 import pytransform3d.rotations as pr
 import pytransform3d.transformations as pt
+from pydantic import Field
 
 from arcade.models.types import BaseModel, PointType
 
 class TransformationType(BaseModel):
-    """Type for describing transformations between coordinate systems.
+    """Type for describing transformations between coordinate systems."""
+    PRECISION: ClassVar[int] = Field(
+        5,
+        description="Floating point precision of the transformation matrices"
+    )
 
-    Parameters
-    ----------
-    PRECISION : ClassVar[int]
-        Floating point precision of the transformation matrices, by default `5`.
-    translation : PointType, optional
-        Translation, by default `(0.0, 0.0, 0.0)`.
-    rotation : PointType, optional
-        Rotation, by default `(0.0, 0.0, 0.0)`. The rotation is described in
-        degrees via the three euler angles around the axes (x, y, z) which are
-        applied in this order.
-    scale : PointType, optional
-        Scaling of the transformation, by default `(1.0, 1.0, 1.0)`.
-    """
-    PRECISION: ClassVar[int] = 5
-
-    translation: PointType | None = PointType(0.0, 0.0, 0.0)
-    rotation: PointType | None = PointType(0.0, 0.0, 0.0)
-    scale: PointType | None = PointType(1.0, 1.0, 1.0)
+    translation: PointType | None = Field(
+        PointType(0.0, 0.0, 0.0),
+        description="Translation.",
+    )
+    rotation: PointType | None = Field(
+        PointType(0.0, 0.0, 0.0),
+        description=(
+            "The rotation is described in degrees via the three euler angles "
+            + "around the axes (x, y, z) which are applied in this order."
+        ),
+    )
+    scale: PointType | None = Field(
+        PointType(1.0, 1.0, 1.0),
+        description="Scaling of the transformation.",
+    )
 
     @property
     def rotation_matrix(self) -> np.ndarray:
@@ -64,12 +66,6 @@ class TransformationType(BaseModel):
             \\cdot
             \\begin{bmatrix} x' \\\\ y' \\\\ z' \\\\ 1 \\end{bmatrix}
 
-
-        Returns
-        -------
-        np.ndarray
-            Shape `(4, 4)`
-
         """
         R =  pr.active_matrix_from_extrinsic_euler_xyz(
             e=np.deg2rad(self.rotation)
@@ -97,11 +93,6 @@ class TransformationType(BaseModel):
             \\cdot
             \\begin{bmatrix} x' \\\\ y' \\\\ z' \\\\ 1 \\end{bmatrix}
 
-        Returns
-        -------
-        np.ndarray
-            Shape `(4, 4)`
-
         """
         return self._round(
             pt.transform_from(
@@ -126,11 +117,6 @@ class TransformationType(BaseModel):
             \\cdot
             \\begin{bmatrix} x' \\\\ y' \\\\ z' \\\\ 1 \\end{bmatrix}
 
-        Returns
-        -------
-        np.ndarray
-            Shape `(4, 4)`
-
         """
         return self._round(
             pt.transform_from(
@@ -154,11 +140,6 @@ class TransformationType(BaseModel):
             R_t \\cdot R_r \\cdot R_s
             \\cdot
             \\begin{bmatrix} x' \\\\ y' \\\\ z' \\\\ 1 \\end{bmatrix}
-
-        Returns
-        -------
-        np.ndarray
-            Shape `(4, 4)`
 
         """
         return np.matmul(
