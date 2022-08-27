@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Literal, NamedTuple
 
 from pydantic import BaseModel as PydanticBaseModel
@@ -6,6 +7,7 @@ from pydantic import constr
 
 class BaseModel(PydanticBaseModel):
     """BaseModel configured for this Library."""
+    __slots__ = ['__weakref__']  # Needed to allow weakrefs
 
     class Config:
         use_enum_values = True
@@ -48,3 +50,12 @@ class SpatialPointType(NamedTuple):
     y: float
     z: float
     t: Literal[1] = 1
+
+
+class SymmetryType(str, Enum):
+    """Possible types of symmetry for objects."""
+    NONE = "none"
+    INHERIT = "inherit"
+    XY_PLANE = "xy_plane"
+    XZ_PLANE = "xz_plane"
+    YZ_PLANE = "yz_plane"

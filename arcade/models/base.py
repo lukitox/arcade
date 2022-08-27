@@ -29,11 +29,17 @@ class OriginModelType(BaseModel, ABC):
         once.
     uid : UidType
         Unique identifier.
+    name : str, optional
+        The object's name, by default `None`.
+    description : str, optional
+        Some description string for the object, by default `None`.
 
     """
     TM: ClassVar[TransformManager] = TransformManager()
     UID: ClassVar[dict[UidType, ref]] = dict()
     uid: UidType
+    name: str | None = None
+    description: str | None = None
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
