@@ -39,9 +39,12 @@ class PointType(NamedTuple):
     z: float
 
 
-class SpatialPointType(PointType):
+class SpatialPointType(NamedTuple):
     """3-D point type equipped with a fourth extra value (equal to one), so it
     can be multiplied with 4x4-transformation matrices.
 
     """
+    x: float
+    y: float
+    z: float
     t: Literal[1] = 1
