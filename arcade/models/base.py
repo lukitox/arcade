@@ -1,5 +1,6 @@
 from abc import ABC
 from typing import ClassVar
+from weakref import ref, WeakSet
 
 from pydantic import Field, validator
 from pytransform3d.transform_manager import TransformManager
@@ -31,8 +32,12 @@ class OriginModelType(BaseModel, ABC):
 
     """
     TM: ClassVar[TransformManager] = TransformManager()
-    UID: ClassVar[set[UidType]] = set()
+    UID: ClassVar[dict[UidType, ref]] = dict()
     uid: UidType
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+        self.UID[self.uid] = ref(self)
 
     @validator('uid')
     def uid_is_unique(cls, uid):
@@ -43,9 +48,9 @@ class OriginModelType(BaseModel, ABC):
         ValueError
             If the uid is already assigned to another object.
         """
-        if not uid in cls.UID:
-            cls.UID.add(uid)
-
+        if not uid in cls.UID:  # new object
+            return uid
+        if cls.UID[uid]() is None:  # key exists, but value is dead weakref
             return uid
         raise ValueError(f'UID "{uid}" is already assigned to another object.')
 
@@ -78,9 +83,9 @@ class ModelType(OriginModelType):
         super().__init__(**data)
 
         self.TM.add_transform(
-            data['parent'],
-            data['uid'],
-            data['transformation'].matrix
+            self.parent,
+            self.uid,
+            self.transformation.matrix
         )
 
     @validator('parent')
