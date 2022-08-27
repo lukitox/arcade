@@ -16,9 +16,9 @@ class TransformationType(BaseModel):
     translation : PointType, optional
         Translation, by default `(0.0, 0.0, 0.0)`.
     rotation : PointType, optional
-        Rotation, by default `(0.0, 0.0, 0.0)`. The rotation is described via
-        the three euler angles around the axes (x, y, z) which are applied in
-        this order.
+        Rotation, by default `(0.0, 0.0, 0.0)`. The rotation is described in
+        degrees via the three euler angles around the axes (x, y, z) which are
+        applied in this order.
     scale : PointType, optional
         Scaling of the transformation, by default `(1.0, 1.0, 1.0)`.
     """
