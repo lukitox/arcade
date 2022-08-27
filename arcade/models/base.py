@@ -4,14 +4,14 @@ from typing import ClassVar
 from pydantic import Field, validator
 from pytransform3d.transform_manager import TransformManager
 
-from .transformation import TransformationType
-from .types import BaseModel, UidType
+from arcade.models.transformation import TransformationType
+from arcade.models.types import BaseModel, UidType
 
 
 class OriginModelType(BaseModel, ABC):
-    """This is the abstract entry type to an `arcade`- model. It represents the
-    object provididing the global coordinate system. Therefore it has no further
-    dependenices on other types.
+    """This is the abstract entry type to an :mod:`arcade`- model. It represents
+    the object provididing the global coordinate system. Therefore it has no
+    further dependenices on other types.
 
     Parameters
     ----------

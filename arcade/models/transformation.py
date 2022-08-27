@@ -4,7 +4,7 @@ import numpy as np
 import pytransform3d.rotations as pr
 import pytransform3d.transformations as pt
 
-from .types import BaseModel, PointType
+from arcade.models.types import BaseModel, PointType
 
 class TransformationType(BaseModel):
     PRECISION: ClassVar[int] = 5
