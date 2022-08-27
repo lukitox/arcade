@@ -1,4 +1,4 @@
-from typing import NamedTuple
+from typing import Literal, NamedTuple
 
 from pydantic import BaseModel as PydanticBaseModel
 from pydantic import constr
@@ -37,3 +37,11 @@ class PointType(NamedTuple):
     x: float
     y: float
     z: float
+
+
+class SpatialPointType(PointType):
+    """3-D point type equipped with a fourth extra value (equal to one), so it
+    can be multiplied with 4x4-transformation matrices.
+
+    """
+    t: Literal[1] = 1
