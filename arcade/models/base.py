@@ -9,21 +9,11 @@ from arcade.models.transformation import TransformationType
 from arcade.models.types import BaseModel, UidType
 
 
-class OriginModelType(BaseModel, ABC):
-    """This is the abstract entry type to an :mod:`arcade`- model. It represents
-    the object provididing the global coordinate system. Therefore it has no
-    further dependenices on other types.
+class AbstractModelType(BaseModel, ABC):
+    """Abstract model type.
 
     Parameters
     ----------
-    TM : ClassVar of type TransformManager
-        The transform manager of an arcade model. Every child instance of this
-        class registers it's own local COS relative so some other COS in the
-        transform manager.
-        It can then provide transformation matrices between all of the
-        registered local coordinate systems.
-        Because it's a class variable, it can be accessed from every child
-        instance.
     UID : ClassVar of type set of UidType
         Set of all given uid's, used to validate that no uid is used more than
         once.
@@ -35,7 +25,6 @@ class OriginModelType(BaseModel, ABC):
         Some description string for the object, by default `None`.
 
     """
-    TM: ClassVar[TransformManager] = TransformManager()
     UID: ClassVar[dict[UidType, ref]] = dict()
     uid: UidType
     name: str | None = None
@@ -61,7 +50,41 @@ class OriginModelType(BaseModel, ABC):
         raise ValueError(f'UID "{uid}" is already assigned to another object.')
 
 
-class SpatialModelType(OriginModelType):
+class ModelType(AbstractModelType):
+    """Abstract model type for all models without a coordinate system to
+    inherit from.
+
+    Parameters
+    ----------
+    parent : UidType
+        Uid of the object this one's coordinate system depends on. The
+        corresponding transformation is assigned to the `transformation`
+        attribute.
+    """
+    parent: UidType
+
+
+class OriginModelType(AbstractModelType):
+    """This is the abstract entry type to an :mod:`arcade`- model. It represents
+    the object provididing the global coordinate system. Therefore it has no
+    further dependenices on other types.
+
+    Parameters
+    ----------
+    TM : ClassVar of type TransformManager
+        The transform manager of an arcade model. Every child instance of this
+        class registers it's own local COS relative so some other COS in the
+        transform manager.
+        It can then provide transformation matrices between all of the
+        registered local coordinate systems.
+        Because it's a class variable, it can be accessed from every child
+        instance.
+
+    """
+    TM: ClassVar[TransformManager] = TransformManager()
+
+
+class SpatialModelType(OriginModelType, ModelType):
     """Abstract type for all models from the second hierarchy level on (below
     :class:`OriginModelType`).
 
