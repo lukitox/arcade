@@ -1,6 +1,6 @@
 from abc import ABC
 from typing import ClassVar
-from weakref import ref, WeakSet
+from weakref import ref
 
 from pydantic import Field, validator
 from pytransform3d.transform_manager import TransformManager
@@ -51,17 +51,7 @@ class AbstractModelType(BaseModel, ABC):
 
 
 class ModelType(AbstractModelType):
-    """Abstract model type for all models without a coordinate system to
-    inherit from.
-
-    Parameters
-    ----------
-    parent : UidType
-        Uid of the object this one's coordinate system depends on. The
-        corresponding transformation is assigned to the `transformation`
-        attribute.
-    """
-    parent: UidType
+   pass
 
 
 class OriginModelType(AbstractModelType):
