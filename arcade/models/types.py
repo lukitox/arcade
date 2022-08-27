@@ -3,6 +3,14 @@ from typing import NamedTuple
 from pydantic import BaseModel as PydanticBaseModel
 from pydantic import constr
 
+
+class BaseModel(PydanticBaseModel):
+    """BaseModel configured for this Library."""
+
+    class Config:
+        use_enum_values = True
+
+
 UidType = constr(
     strip_whitespace=True,
     to_lower=True,
@@ -12,7 +20,7 @@ UidType = constr(
 
 class PointType(NamedTuple):
     """3-D point type, inherits from `NamedTuple`, and can therefore either be
-    accesed via its attributes (x, y, z) or its indices (0, 1, 1).
+    accesed via its attributes (x, y, z) or its indices (0, 1, 2).
 
     .. code-block:: python
 
@@ -25,11 +33,6 @@ class PointType(NamedTuple):
         >>> p[0] = 7.0  # keep in mind that tuples are immutable.
         TypeError: 'PointType' object does not support item assignment
 
-    Parameters
-    ----------
-    x : float
-    y : float
-    z : float
     """
     x: float
     y: float
