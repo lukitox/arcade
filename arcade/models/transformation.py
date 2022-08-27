@@ -8,11 +8,14 @@ from pydantic import Field
 from arcade.models.types import BaseModel, PointType
 
 class TransformationType(BaseModel):
-    """Type for describing transformations between coordinate systems."""
-    PRECISION: ClassVar[int] = Field(
-        5,
-        description="Floating point precision of the transformation matrices"
-    )
+    """Type for describing transformations between coordinate systems.
+
+    Attributes
+    ----------
+    PRECISION : ClassVar[int]
+        Floating point precision of the transformation matrices, by default `5`.
+    """
+    PRECISION: ClassVar[int] = 5
 
     translation: PointType | None = Field(
         PointType(0.0, 0.0, 0.0),
@@ -66,6 +69,11 @@ class TransformationType(BaseModel):
             \\cdot
             \\begin{bmatrix} x' \\\\ y' \\\\ z' \\\\ 1 \\end{bmatrix}
 
+        Returns
+        -------
+        np.ndarray
+            Shape `(4, 4)`
+
         """
         R =  pr.active_matrix_from_extrinsic_euler_xyz(
             e=np.deg2rad(self.rotation)
@@ -93,6 +101,11 @@ class TransformationType(BaseModel):
             \\cdot
             \\begin{bmatrix} x' \\\\ y' \\\\ z' \\\\ 1 \\end{bmatrix}
 
+        Returns
+        -------
+        np.ndarray
+            Shape `(4, 4)`
+
         """
         return self._round(
             pt.transform_from(
@@ -117,6 +130,11 @@ class TransformationType(BaseModel):
             \\cdot
             \\begin{bmatrix} x' \\\\ y' \\\\ z' \\\\ 1 \\end{bmatrix}
 
+        Returns
+        -------
+        np.ndarray
+            Shape `(4, 4)`
+
         """
         return self._round(
             pt.transform_from(
@@ -140,6 +158,11 @@ class TransformationType(BaseModel):
             R_t \\cdot R_r \\cdot R_s
             \\cdot
             \\begin{bmatrix} x' \\\\ y' \\\\ z' \\\\ 1 \\end{bmatrix}
+
+        Returns
+        -------
+        np.ndarray
+            Shape `(4, 4)`
 
         """
         return np.matmul(

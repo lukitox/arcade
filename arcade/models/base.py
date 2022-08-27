@@ -11,21 +11,21 @@ from arcade.models.types import BaseModel, UidType
 
 class AbstractModelType(BaseModel, ABC):
     """Abstract model type."""
-    UID: ClassVar[dict[UidType, ref]] = dict()
+    _UID: ClassVar[dict[UidType, ref]] = dict()
     uid: UidType = Field(..., description="Unique identifier.")
     name: str | None = Field(description="The object's name.")
     description: str | None = Field(description="Some description string.")
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
-        self.UID[self.uid] = ref(self)
+        self._UID[self.uid] = ref(self)
 
     @validator('uid')
     def uid_is_unique(cls, uid):
         """Ensures that the entered uid is not already taken."""
-        if not uid in cls.UID:  # new object
+        if not uid in cls._UID:  # new object
             return uid
-        if cls.UID[uid]() is None:  # key exists, but value is dead weakref
+        if cls._UID[uid]() is None:  # key exists, but value is dead weakref
             return uid
         raise ValueError(f'UID "{uid}" is already assigned to another object.')
 
@@ -38,6 +38,17 @@ class OriginModelType(AbstractModelType):
     """This is the abstract entry type to an :mod:`arcade`- model. It represents
     the object provididing the global coordinate system. Therefore it has no
     further dependenices on other types.
+
+    Attributes
+    ----------
+    TM : ClassVar[TransformManager]
+        The transform manager of an arcade model. Every child instance of this
+        class registers it's own local COS relative so some other COS in the
+        transform manager.
+        It can then provide transformation matrices between all of the
+        registered local coordinate systems.
+        Because it's a class variable, it can be accessed from every child
+        instance.
 
     """
     TM: ClassVar[TransformManager] = TransformManager()
@@ -57,7 +68,7 @@ class SpatialModelType(OriginModelType, ModelType):
         ),
     )
     transformation: TransformationType | None = Field(
-        default_factory=TransformationType,
+        default=TransformationType(),
         description=(
             "Transform from the parent coordinate system to this object's "
             + "local coordinate system. The default value corresponds to a "
@@ -79,6 +90,6 @@ class SpatialModelType(OriginModelType, ModelType):
     @validator('parent')
     def parent_exists(cls, parent):
         """Ensures that the parent object exists."""
-        if parent in cls.UID:
+        if parent in cls._UID:
             return parent
         raise ValueError(f'Parent uid "{parent}" does not exist.')

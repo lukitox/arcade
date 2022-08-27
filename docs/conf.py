@@ -35,6 +35,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
     'sphinxcontrib.autodoc_pydantic',
+    'sphinx.ext.napoleon',
 ]
 
 # Autodoc options
@@ -45,13 +46,15 @@ autodoc_default_options = {
     'undoc-members': True,
     'exclude-members': (
         'construct, copy, dict, from_orm, json, parse_file, parse_obj, '
-        + 'parse_raw, schema, schema_json, update_forward_refs, validate'
+        + 'parse_raw, schema, schema_json, update_forward_refs, validate '
+        + 'count, index, validate'
     ),
 }
 
 # autodoc-pydantic options
 autodoc_pydantic_model_show_config_summary = False
-autodoc_pydantic_model_hide_paramlist = False
+# autodoc_member_order = "groupwise"
+# autodoc_pydantic_model_hide_paramlist = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -103,13 +106,25 @@ todo_include_todos = False
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'pydata_sphinx_theme'
 
 # Theme options are theme-specific and customize the look and feel of a
 # theme further.  For a list of options available for each theme, see the
 # documentation.
 #
 # html_theme_options = {}
+
+html_theme_options = {
+    "icon_links": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/lukitox/arcade",
+            "icon": "fab fa-github-square",
+            "type": "fontawesome",
+        }
+   ]
+}
+html_title = 'arcade'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
