@@ -3,14 +3,14 @@ from typing import ClassVar
 import numpy as np
 import pytransform3d.rotations as pr
 import pytransform3d.transformations as pt
-from pydantic import BaseModel as PydanicBaseModel
+from pydantic import BaseModel as PydanticBaseModel
 from pydantic import Field, validator
 from pytransform3d.transform_manager import TransformManager
 
 from .types import UidType
 
 
-class BaseModel(PydanicBaseModel):
+class BaseModel(PydanticBaseModel):
 
     class Config:
         use_enum_values = True
@@ -22,7 +22,7 @@ class OriginModelType(BaseModel):
     uid: UidType
 
     @validator('uid')
-    def uid_is_unique(cls, uid):
+    def _uid_is_unique(cls, uid):
         if not uid in cls.UID:
             cls.UID.add(uid)
 
@@ -98,7 +98,7 @@ class ModelType(OriginModelType):
         )
 
     @validator('parent')
-    def uid_is_unique(cls, parent):
+    def _parent_exists(cls, parent):
         if parent in cls.UID:
             return parent
         raise ValueError(f'Parent uid "{parent}" does not exist.')
