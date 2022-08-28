@@ -11,7 +11,7 @@ from arcade.models.types import BaseModel, PointType
 class TransformationType(BaseModel):
     """Type for describing transformations between coordinate systems.
 
-    Attributes
+    Parameters
     ----------
     PRECISION : ClassVar[int]
         Floating point precision of the transformation matrices, by default `5`.
@@ -203,6 +203,70 @@ class TransformationType(BaseModel):
         }
 
         return np.diag(diags[plane])
+
+    @staticmethod
+    @validate_arguments
+    def shear_matrix(
+        plane: Literal['xy', 'yz', 'xz'], a: float, b: float,
+    ) -> np.ndarray:
+        """Returns the shear matrices for symmetric objects.
+
+        .. math::
+
+            S_{xy} =
+            \\begin{bmatrix}
+            1 & 0 & a & 0 \\\\
+            0 & 1 & b & 0 \\\\
+            0 & 0 & 1 & 0 \\\\
+            0 & 0 & 0 & 1
+            \\end{bmatrix}
+            \\\\
+            S_{yz} =
+            \\begin{bmatrix}
+            1 & 0 & 0 & 0 \\\\
+            a & 1 & 0 & 0 \\\\
+            b & 0 & 1 & 0 \\\\
+            0 & 0 & 0 & 1
+            \\end{bmatrix}
+            \\\\
+            S_{xz} =
+            \\begin{bmatrix}
+            1 & a & 0 & 0 \\\\
+            0 & 1 & 0 & 0 \\\\
+            0 & b & 1 & 0 \\\\
+            0 & 0 & 0 & 1
+            \\end{bmatrix}
+            \\\\
+            \\begin{bmatrix} x \\\\ y \\\\ z \\\\ 1 \\end{bmatrix} =
+            S_{ab} \\cdot
+            \\begin{bmatrix} x' \\\\ y' \\\\ z' \\\\ 1 \\end{bmatrix}
+
+        Parameters
+        ----------
+        plane : Literal['xy', 'yz', 'xz']
+            The symmetry plane.
+        a : float
+            Shear value of the first axis.
+        b : float
+            Shear value of the second axis.
+
+        Returns
+        -------
+        np.ndarray
+            Shape :math:`(4, 4)`
+
+        """
+        id_a_b = {
+            'xy': ((0, 2), (1, 2)),
+            'yz': ((1, 0), (2, 0)),
+            'xz': ((0, 1), (2, 1)),
+        }
+        id_a, id_b = id_a_b[plane]
+
+        A = np.eye(4)
+        A[id_a], A[id_b] = a, b
+
+        return A
 
     @classmethod
     def _round(cls, arr: np.ndarray) -> np.ndarray:
