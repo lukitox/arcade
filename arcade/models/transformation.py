@@ -1,9 +1,9 @@
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import numpy as np
 import pytransform3d.rotations as pr
 import pytransform3d.transformations as pt
-from pydantic import Field
+from pydantic import Field, validate_arguments
 
 from arcade.models.types import BaseModel, PointType
 
@@ -173,5 +173,36 @@ class TransformationType(BaseModel):
             ),
         )
 
-    def _round(self, arr: np.ndarray) -> np.ndarray:
-        return np.round(arr, self.PRECISION)
+    @staticmethod
+    @validate_arguments
+    def mirror_matrix(plane: Literal['xy', 'yz', 'xz']) -> np.ndarray:
+        """Returns transformation matrices for symmetric objects.
+
+        .. math::
+
+            A_{xy} = diag(1, 1, -1, 1) \\\\
+            A_{yz} = diag(-1, 1, 1, 1) \\\\
+            A_{xz} = diag(1, -1, 1, 1)
+
+        Parameters
+        ----------
+        plane : Literal['xy', 'yz', 'xz']
+            The symmetry plane.
+
+        Returns
+        -------
+        np.ndarray
+            Shape `(4, 4)`
+
+        """
+        diags = {
+            'xy': (1, 1, -1, 1),
+            'yz': (-1, 1, 1, 1),
+            'xz': (1, -1, 1, 1),
+        }
+
+        return np.diag(diags[plane])
+
+    @classmethod
+    def _round(cls, arr: np.ndarray) -> np.ndarray:
+        return np.round(arr, cls.PRECISION)
