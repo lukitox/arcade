@@ -54,7 +54,7 @@ autodoc_default_options = {
 # autodoc-pydantic options
 autodoc_pydantic_model_show_config_summary = False
 # autodoc_member_order = "groupwise"
-# autodoc_pydantic_model_hide_paramlist = False
+autodoc_pydantic_model_hide_paramlist = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
