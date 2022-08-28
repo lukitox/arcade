@@ -7,6 +7,7 @@ from pydantic import Field, validate_arguments
 
 from arcade.models.types import BaseModel, PointType
 
+
 class TransformationType(BaseModel):
     """Type for describing transformations between coordinate systems.
 
@@ -72,7 +73,7 @@ class TransformationType(BaseModel):
         Returns
         -------
         np.ndarray
-            Shape `(4, 4)`
+            Shape :math:`(4, 4)`
 
         """
         R =  pr.active_matrix_from_extrinsic_euler_xyz(
@@ -104,7 +105,7 @@ class TransformationType(BaseModel):
         Returns
         -------
         np.ndarray
-            Shape `(4, 4)`
+            Shape :math:`(4, 4)`
 
         """
         return self._round(
@@ -133,7 +134,7 @@ class TransformationType(BaseModel):
         Returns
         -------
         np.ndarray
-            Shape `(4, 4)`
+            Shape :math:`(4, 4)`
 
         """
         return self._round(
@@ -162,7 +163,7 @@ class TransformationType(BaseModel):
         Returns
         -------
         np.ndarray
-            Shape `(4, 4)`
+            Shape :math:`(4, 4)`
 
         """
         return np.matmul(
@@ -192,7 +193,7 @@ class TransformationType(BaseModel):
         Returns
         -------
         np.ndarray
-            Shape `(4, 4)`
+            Shape :math:`(4, 4)`
 
         """
         diags = {
@@ -206,3 +207,34 @@ class TransformationType(BaseModel):
     @classmethod
     def _round(cls, arr: np.ndarray) -> np.ndarray:
         return np.round(arr, cls.PRECISION)
+
+
+def transform_array(A: np.ndarray, coords: np.ndarray) -> np.ndarray:
+    """Transforms an array of spatial coordinates :math:`(x, y, z, 1)` using
+    the provided transformation matrix.
+
+    .. math::
+
+        C = A \\cdot C'
+
+    Parameters
+    ----------
+    A : np.ndarray
+        Transformation matrix of shape :math:`(4, 4)`.
+    coords : np.ndarray
+        Array with :math:`k` coordinates of shape :math:`(k, 4)`, so every row
+        represents a point.
+
+    Returns
+    -------
+    np.ndarray
+        Shape :math:`(k, 4)`
+
+    """
+    return np.apply_along_axis(np.matmul, 1, coords, A)
+
+
+# Some expressoions that are used occasionally and therfore get an alias
+unit_length_x = np.array(((0, 0, 0, 1), (1, 0, 0, 1)))
+unit_length_y = np.array(((0, 0, 0, 1), (0, 1, 0, 1)))
+unit_length_z = np.array(((0, 0, 0, 1), (0, 0, 1, 1)))
