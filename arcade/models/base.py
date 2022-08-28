@@ -1,10 +1,13 @@
 from abc import ABC
 from typing import ClassVar
+from warnings import warn
 from weakref import ref
 
+import numpy as np
 from pydantic import Field, validator
 from pytransform3d.transform_manager import TransformManager
 
+import arcade.models.transformation as tm
 from arcade.models.transformation import TransformationType
 from arcade.models.types import BaseModel, UidType
 
@@ -12,6 +15,7 @@ from arcade.models.types import BaseModel, UidType
 class AbstractModelType(BaseModel, ABC):
     """Abstract model type."""
     _UID: ClassVar[dict[UidType, ref]] = dict()
+    STRICT: ClassVar[bool] = False
     uid: UidType = Field(
         ...,
         description=(
@@ -33,7 +37,11 @@ class AbstractModelType(BaseModel, ABC):
             return uid
         if cls._UID[uid]() is None:  # key exists, but value is dead weakref
             return uid
-        raise ValueError(f'UID "{uid}" is already assigned to another object.')
+
+        msg = f'UID "{uid}" is already assigned to another object.'
+        if cls.STRICT:
+            raise ValueError(msg)
+        warn(msg + f"\nIgnore this warning if you are just overwriting {uid}.")
 
 
 class ModelType(AbstractModelType):
@@ -57,7 +65,7 @@ class OriginModelType(AbstractModelType):
         instance.
 
     """
-    TM: ClassVar[TransformManager] = TransformManager()
+    TM: ClassVar[TransformManager] = TransformManager(check=False)
 
 
 class SpatialModelType(OriginModelType, ModelType):
@@ -94,8 +102,34 @@ class SpatialModelType(OriginModelType, ModelType):
         )
 
     @validator('parent')
-    def parent_exists(cls, parent):
-        """Ensures that the parent object exists."""
-        if parent in cls._UID:
-            return parent
-        raise ValueError(f'Parent uid "{parent}" does not exist.')
+    def uid_exists(cls, uid):
+        """Ensures that the uid exists."""
+        if uid in cls._UID:
+            return uid
+        raise ValueError(f'Uid "{uid}" does not exist.')
+
+    def _transform_coords(
+        self, coords: np.ndarray, cos_uid: UidType | None = None
+    ) -> np.ndarray:
+        """Transforms an array with :math:`k` coordinates of shape
+        :math:`(k, 4)`, so every row represents a point.
+
+        Parameters
+        ----------
+        coords : np.ndarray
+            Array with :math:`k` coordinates of shape :math:`(k, 4)`, so every
+            row represents a point.
+        cos_uid : UidType, optional
+            If `None` (default), take the local COS, else the referenced one.
+
+        Returns
+        -------
+        np.ndarray
+            Shape :math:`(k, 4)`
+        """
+        A2B = self.transformation.matrix
+        if cos_uid is not None:
+            _ = self.uid_exists(cos_uid)  # Validate the uid
+            A2B = np.matmul(A2B, self.TM.get_transform(cos_uid, self.uid))
+
+        return tm.transform_array(A2B, coords)
