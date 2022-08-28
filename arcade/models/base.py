@@ -12,7 +12,13 @@ from arcade.models.types import BaseModel, UidType
 class AbstractModelType(BaseModel, ABC):
     """Abstract model type."""
     _UID: ClassVar[dict[UidType, ref]] = dict()
-    uid: UidType = Field(..., description="Unique identifier.")
+    uid: UidType = Field(
+        ...,
+        description=(
+            "Unique identifier. Only lowercase characters, underscores and "
+            + "dots allowed."
+        ),
+    )
     name: str | None = Field(description="The object's name.")
     description: str | None = Field(description="Some description string.")
 

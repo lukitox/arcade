@@ -15,7 +15,8 @@ class BaseModel(PydanticBaseModel):
 
 UidType = constr(
     strip_whitespace=True,
-    to_lower=True,
+    max_length=40,
+    regex="^[a-z0-9._]*$",
 )
 """Unique ID type: a string with some constrictions."""
 
@@ -56,6 +57,6 @@ class SymmetryType(str, Enum):
     """Possible types of symmetry for objects."""
     NONE = "none"
     INHERIT = "inherit"
-    XY_PLANE = "xy_plane"
-    XZ_PLANE = "xz_plane"
-    YZ_PLANE = "yz_plane"
+    XY_PLANE = "xy"
+    XZ_PLANE = "xz"
+    YZ_PLANE = "yz"
