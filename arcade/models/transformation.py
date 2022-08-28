@@ -222,19 +222,19 @@ def transform_array(A: np.ndarray, coords: np.ndarray) -> np.ndarray:
     A : np.ndarray
         Transformation matrix of shape :math:`(4, 4)`.
     coords : np.ndarray
-        Array with :math:`k` coordinates of shape :math:`(k, 4)`, so every row
-        represents a point.
+        Array with :math:`k` coordinates of shape :math:`(4, k)`, so every
+        column represents a point.
 
     Returns
     -------
     np.ndarray
-        Shape :math:`(k, 4)`
+        Shape :math:`(4, k)`
 
     """
-    return np.apply_along_axis(np.matmul, 1, coords, A)
+    return np.matmul(A, coords)
 
 
 # Some expressoions that are used occasionally and therfore get an alias
-unit_length_x = np.array(((0, 0, 0, 1), (1, 0, 0, 1)))
-unit_length_y = np.array(((0, 0, 0, 1), (0, 1, 0, 1)))
-unit_length_z = np.array(((0, 0, 0, 1), (0, 0, 1, 1)))
+unit_length_x = np.array(((0, 0, 0, 1), (1, 0, 0, 1))).T
+unit_length_y = np.array(((0, 0, 0, 1), (0, 1, 0, 1))).T
+unit_length_z = np.array(((0, 0, 0, 1), (0, 0, 1, 1))).T
