@@ -59,7 +59,7 @@ class RectangleProfileType(StandardProfileType):
         return v
 
     @property
-    def coords(self) -> float:
+    def coords(self) -> np.ndarray:
         """Returns an array of the profiles coordinates.
 
         .. note::
@@ -187,6 +187,32 @@ class SuperEllipseProfileType(StandardProfileType):
         description="Exponent n for upper semi-ellipse."
     )
 
+    @property
+    def coords(self) -> np.ndarray:
+        z0 = self.lower_height_fraction - 0.5
+        t = np.linspace(0, np.pi / 2, self.n_points // 2)
+        c, s = np.cos(t), np.sin(t)
+
+        def top_side(m: float, n: float, z0: float) -> np.ndarray:
+            y = np.abs(c)**(2/m) * np.sign(c) / 2
+            z = np.abs(s)**(2/n) * np.sign(s) * (0.5 - z0) + z0
+            return y, z
+
+        def bot_side(m: float, n: float, z0: float) -> np.ndarray:
+            y = np.abs(c)**(2/m) * np.sign(c) / 2
+            z = - np.abs(s)**(2/n) * np.sign(s) * (0.5 + z0) + z0
+            return y, z
+
+        def assemble(f: callable, m: float, n: float, z0: float) -> np.ndarray:
+            y, z = f(m, n, z0)
+            return np.array((np.zeros_like(y), y, z, np.ones_like(y)))
+
+        return np.hstack(
+            (
+                np.flip(assemble(top_side, self.m_upper, self.n_upper, z0), 1),
+                assemble(bot_side, self.m_lower, self.n_lower, z0),
+            )
+        )
 
 class NacaAirfoilType(TypeOfProfileType):
     pass
