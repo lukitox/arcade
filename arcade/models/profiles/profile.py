@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 from pydantic import (Field, NonNegativeFloat, confloat, conint, conlist,
-                      validator)
+                      validator, PositiveFloat)
 
 from arcade.models.base import ModelType
 from arcade.models.transformation import TransformationType
@@ -137,6 +137,56 @@ class RectangleProfileType(StandardProfileType):
                 ),
             )
         ).T
+
+
+class SuperEllipseProfileType(StandardProfileType):
+    """A profile based on superellipses is composed of an upper and a lower
+    semi-ellipse, which may differ from each other in their parameterization.
+    The total width and height of the profile is always 1, since scaling is
+    performed after referencing (e.g., in the fuselage).
+
+    The `lower_height_fraction` describes the portion of the lower semi-ellipse
+    on the total height.
+    The resulting profile is defined by the following set of equations:
+
+    .. math::
+
+        &|2y|^{m_{upper}} + |\\frac{z-z_0}{0.5-z_0}|^{n_{upper}} = 1
+        ; z\\ge z_0 \\\\
+        &|2y|^{m_{lower}} + |\\frac{z-z_0}{0.5+z_0}|^{n_{lower}} = 1
+        ; z< z_0 \\\\
+        &\\text{with}\\\\
+        &z_0 = \\text{lower_height_fraction} - 0.5
+
+    .. note::
+
+        For exponents that are infinitely large, the superellipse converges to
+        a rectangle. However, the value Inf is not a valid entry at this point.
+    """
+    lower_height_fraction: confloat(gt=0, lt=1) = Field(
+        ...,
+        description=(
+            "Fraction of height of the lower semi-ellipse relative to the "
+            + "total height."
+        ),
+    )
+    m_lower: PositiveFloat = Field(
+        ...,
+        description="Exponent m for lower semi-ellipse."
+    )
+    m_upper: PositiveFloat = Field(
+        ...,
+        description="Exponent m for upper semi-ellipse."
+    )
+    n_lower: PositiveFloat = Field(
+        ...,
+        description="Exponent n for lower semi-ellipse."
+    )
+    n_upper: PositiveFloat = Field(
+        ...,
+        description="Exponent n for upper semi-ellipse."
+    )
+
 
 class NacaAirfoilType(TypeOfProfileType):
     pass
