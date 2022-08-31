@@ -20,6 +20,18 @@ class TypeOfProfileType(BaseModel, ABC):
 class PointListType(TypeOfProfileType):
     point_list: conlist(SpatialPointType, min_items=2, unique_items=True)
 
+    @property
+    def coords(self) -> np.ndarray:
+        """Returns an array of the profiles coordinates.
+
+        Returns
+        -------
+        np.ndarray
+            Shape :math:`(4, k)`
+
+        """
+        return np.array(self.point_list).T
+
 
 class StandardProfileType(TypeOfProfileType):
     n_points: conint(ge=10) | None = Field(
@@ -189,6 +201,14 @@ class SuperEllipseProfileType(StandardProfileType):
 
     @property
     def coords(self) -> np.ndarray:
+        """Returns an array of the profiles coordinates.
+
+        Returns
+        -------
+        np.ndarray
+            Shape :math:`(4, k)`
+
+        """
         z0 = self.lower_height_fraction - 0.5
         t = np.linspace(0, np.pi / 2, self.n_points // 2)
         c, s = np.cos(t), np.sin(t)
