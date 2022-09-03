@@ -1,12 +1,15 @@
 from abc import ABC, abstractmethod
+from itertools import starmap
 
 import numpy as np
 from pydantic import (Field, NonNegativeFloat, confloat, conint, conlist,
-                      validator, PositiveFloat, constr)
+                      validator, PositiveFloat, constr, validate_arguments)
+from scipy.interpolate import interp1d
 
 from arcade.models.base import ModelType
 from arcade.models.transformation import TransformationType
 from arcade.models.types import BaseModel, SpatialPointType
+from arcade.models.util import unit_spacing, SPACINGS
 
 
 class TypeOfProfileType(BaseModel, ABC):
@@ -18,7 +21,7 @@ class TypeOfProfileType(BaseModel, ABC):
 
 
 class PointListType(TypeOfProfileType):
-    point_list: conlist(SpatialPointType, min_items=2, unique_items=True)
+    point_list: conlist(SpatialPointType, min_items=2)
 
     @property
     def coords(self) -> np.ndarray:
@@ -196,7 +199,62 @@ class SuperEllipseProfileType(StandardProfileType):
 
 
 class AirfoilType(TypeOfProfileType):
-    pass
+
+    @property
+    def top(self) -> np.ndarray:
+        leading_edge = self.coords[0].argmin()
+        return self.coords[:, leading_edge:]
+
+    @property
+    def bottom(self) -> np.ndarray:
+        leading_edge = self.coords[0].argmin()
+        return self.coords[:, :leading_edge]
+
+    def _normalize(
+        self,
+        n_points: int | None = 50,
+        spacing: SPACINGS | None = 'cosine',
+        kind: str = 'cubic',
+    ) -> np.ndarray:
+        top = self._interpolate(self.top, n_points, spacing, kind)
+        bot = self._interpolate(self.bottom, n_points, spacing, kind)
+
+        return top, bot
+
+    @staticmethod
+    def _interpolate(
+        array: np.ndarray, n_points: int, spacing: SPACINGS, kind: str
+    ) -> np.ndarray:
+        x, _, z, _ = array
+        pts = unit_spacing(n_points, spacing)
+        f = interp1d(x, z, kind=kind, fill_value="extrapolate")
+
+        return np.array((pts, np.zeros_like(pts), f(pts), np.ones_like(pts)))
+
+
+    def thickness(
+        self,
+        n_points: int | None = 50,
+        spacing: SPACINGS | None = 'cosine',
+        kind: str = 'cubic',
+    ) -> np.ndarray:
+        (x, y, z_t, ones), (_, _, z_b, _) = self._normalize(
+            n_points, spacing, kind
+        )
+
+        return np.array((x, y, z_t - z_b, ones))
+
+    def camberline(
+        self,
+        n_points: int | None = 50,
+        spacing: SPACINGS | None = 'cosine',
+        kind: str = 'cubic',
+    ) -> np.ndarray:
+        (x, y, z_t, ones), (_, _, z_b, _) = self._normalize(
+            n_points, spacing, kind
+        )
+
+        return np.array((x, y, z_t + z_b, ones))
 
 
 class NacaAirfoilType(AirfoilType):
@@ -206,10 +264,17 @@ class NacaAirfoilType(AirfoilType):
         description='The NACA 4-digit number.'
     )
 
-    @property
-    @abstractmethod
-    def camber_line(self) -> np.ndarray:
-        pass
+
+class PointListAirfoilType(AirfoilType, PointListType):
+
+    @classmethod
+    def from_file(cls, path: str, skiprows: int = 1):
+        x, z = np.loadtxt(path, skiprows=skiprows).T
+        y = np.zeros_like(x)
+        ones = np.ones_like(x)
+        array = np.array((x, y, z, ones)).T
+
+        return cls(point_list=list(starmap(SpatialPointType, array)))
 
 
 class ProfileType(ModelType):
