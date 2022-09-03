@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 from pydantic import (Field, NonNegativeFloat, confloat, conint, conlist,
-                      validator, PositiveFloat)
+                      validator, PositiveFloat, constr)
 
 from arcade.models.base import ModelType
 from arcade.models.transformation import TransformationType
@@ -74,81 +74,41 @@ class RectangleProfileType(StandardProfileType):
     def coords(self) -> np.ndarray:
         """Returns an array of the profiles coordinates.
 
-        .. note::
-
-            The Number of points may be less than `n_points`, since the profile
-            is constructed from three elements (arc, radius, arc), and redundant
-            points are removed.
-
-            I'm not quite happy with this implementation, but it's not that
-            easy to write a function that returns defined, equal spaced
-            points and is easy to understand. So this might change in the
-            future.
-
         Returns
         -------
         np.ndarray
             Shape :math:`(4, k)`
 
         """
-        c = self.height_to_width_ratio
+        half_width = 0.5
+        height = half_width * self.height_to_width_ratio * 2
         r = self.corner_radius
 
-        len_top = 0.5 - r
-        len_rad = np.pi * r / 2
-        len_side = c / 2 - r
-        lens = (len_top, len_rad, len_side)
-        length = sum(lens)
+        a = half_width - r
+        b = height - 2 * r
+        arc = np.pi * r / 2
+        lens = np.cumsum((a, arc, b, arc, a))
 
-        n_pts = [int((l * self.n_points) // (2 * length)) for l in lens]
+        def coords(length: float):
+            if length < lens[0]:
+                return (0, length, height / 2, 1)
+            elif length < lens[1]:
+                l = length - lens[0]
+                return (0, a + np.sin(l / r) * r, b / 2 + np.cos(l / r) * r, 1)
+            elif length < lens[2]:
+                l = length - lens[1]
+                return (0, half_width, b / 2 - l, 1)
+            elif length < lens[3]:
+                l = length - lens[2]
+                return (0, a + np.cos(l / r) * r, -b / 2 - np.sin(l / r) * r, 1)
+            elif length <= lens[4]:
+                return (0, lens[4] - length, - height / 2, 1)
+            raise ValueError('Length too long')
 
-        # one more point to crop out afterwards so no points overlap
-        points_top = np.array(
-            (
-                np.zeros(n_pts[0] + 1),
-                np.linspace(0, len_top, n_pts[0] + 1),
-                np.ones(n_pts[0] + 1) * c / 2,
-                np.ones(n_pts[0] + 1),
-            )
-        )
+        vcoords = np.vectorize(coords)
+        points = np.linspace(0, lens[-1], self.n_points)
 
-        pts_rad = np.linspace(0, np.pi / 2, n_pts[1])
-        points_rad = np.array(
-            (
-                np.zeros(n_pts[1]),
-                0.5 - r + np.sin(pts_rad) * r,
-                len_side  + np.cos(pts_rad) * r,
-                np.ones(n_pts[1]),
-            )
-        )
-
-        # one more point to crop out afterwards so no points overlap
-        points_side = np.array(
-            (
-                np.zeros(n_pts[2] + 2),
-                np.ones(n_pts[2] + 2) * 0.5,
-                np.linspace(len_side, 0, n_pts[2] + 2),
-                np.ones(n_pts[2] + 2),
-            )
-        )
-
-        points = np.hstack(
-            (
-                points_top[:, :-1],
-                points_rad,
-                points_side[:, 1:],
-            )
-        )
-
-        return np.vstack(
-            (
-                points[:, :-1].T,
-                np.flip(
-                    np.matmul(TransformationType.mirror_matrix('xy'), points).T,
-                    0,
-                ),
-            )
-        ).T
+        return np.array(vcoords(points))
 
 
 class SuperEllipseProfileType(StandardProfileType):
@@ -234,8 +194,22 @@ class SuperEllipseProfileType(StandardProfileType):
             )
         )
 
-class NacaAirfoilType(TypeOfProfileType):
+
+class AirfoilType(TypeOfProfileType):
     pass
+
+
+class NacaAirfoilType(AirfoilType):
+    """NACA 4-Series airfoil type."""
+    number: constr(regex='^[0-9]{4}$') = Field(
+        ...,
+        description='The NACA 4-digit number.'
+    )
+
+    @property
+    @abstractmethod
+    def camber_line(self) -> np.ndarray:
+        pass
 
 
 class ProfileType(ModelType):
