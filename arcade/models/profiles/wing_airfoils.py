@@ -1,7 +1,7 @@
 from itertools import starmap
 
 import numpy as np
-from pydantic import Field, conint
+from pydantic import Field, conint, PositiveInt, validate_arguments
 from scipy.interpolate import interp1d
 
 from arcade.models.base import ModelType
@@ -41,6 +41,7 @@ class AirfoilType(TypeOfProfileType):
         leading_edge = self.coords[0].argmin()
         return self.coords[:, :leading_edge]
 
+    @validate_arguments(config=dict(arbitrary_types_allowed=True))
     def query(
         self,
         points: np.ndarray,
@@ -101,9 +102,10 @@ class AirfoilType(TypeOfProfileType):
             + "to be entered"
         )
 
+    @validate_arguments(config=dict(arbitrary_types_allowed=True))
     def thickness(
         self,
-        n_points: int | None = 50,
+        n_points: PositiveInt | None = 50,
         spacing: SPACINGS | np.ndarray | None = 'cosine',
         kind: str = 'cubic',
     ) -> np.ndarray:
@@ -130,9 +132,10 @@ class AirfoilType(TypeOfProfileType):
 
         return np.array((x, y, (z_t - z_b) / 2, ones))
 
+    @validate_arguments(config=dict(arbitrary_types_allowed=True))
     def camberline(
         self,
-        n_points: int | None = 50,
+        n_points: PositiveInt | None = 50,
         spacing: SPACINGS | np.ndarray | None = 'cosine',
         kind: str = 'cubic',
     ) -> np.ndarray:
@@ -159,9 +162,10 @@ class AirfoilType(TypeOfProfileType):
 
         return np.array((x, y, z_t + z_b, ones))
 
+    @validate_arguments(config=dict(arbitrary_types_allowed=True))
     def interpolate(
         self,
-        n_points: int | None = 100,
+        n_points: PositiveInt | None = 100,
         spacing: SPACINGS | np.ndarray | None = 'cosine',
         kind: str = 'cubic',
     ) -> np.ndarray:
@@ -240,9 +244,10 @@ class NacaAirfoilType(AirfoilType):
         """
         return int(self.number[2:]) / 100
 
+    @validate_arguments(config=dict(arbitrary_types_allowed=True))
     def camberline(
         self,
-        n_points: int | None = 50,
+        n_points: PositiveInt | None = 50,
         spacing: SPACINGS | np.ndarray | None = 'cosine',
         **kwargs,
     ) -> np.ndarray:
@@ -276,9 +281,10 @@ class NacaAirfoilType(AirfoilType):
 
         return np.array(vcamber(points))
 
+    @validate_arguments(config=dict(arbitrary_types_allowed=True))
     def thickness(
         self,
-        n_points: int | None = 50,
+        n_points: PositiveInt | None = 50,
         spacing: SPACINGS | np.ndarray | None = 'cosine',
         **kwargs,
     ) -> np.ndarray:
@@ -336,6 +342,7 @@ class PointListAirfoilType(AirfoilType, PointListType, ModelType):
     back."""
 
     @classmethod
+    @validate_arguments
     def from_file(cls, path: str, skiprows: int = 1, **kwargs):
         """Alternative constructor to read airfoil coordinates from file
         in the xfoil format.
