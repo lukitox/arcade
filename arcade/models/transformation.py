@@ -1,8 +1,6 @@
 from typing import ClassVar, Literal
 
 import numpy as np
-import pytransform3d.rotations as pr
-import pytransform3d.transformations as pt
 from pydantic import Field, validate_arguments
 
 from arcade.models.types import BaseModel, PointType
@@ -45,30 +43,6 @@ class TransformationType(BaseModel):
             R_z \\cdot R_y \\cdot R_x
             \\cdot
             \\begin{bmatrix} x' \\\\ y' \\\\ z' \\\\ 1 \\end{bmatrix}
-            \\\\
-            \\begin{bmatrix} x \\\\ y \\\\ z \\\\ 1 \\end{bmatrix} & =
-            \\begin{bmatrix}
-            cos \\theta & - sin \\theta & 0 & 0 \\\\
-            sin \\theta & cos \\theta   & 0 & 0 \\\\
-            0           & 0             & 0 & 0 \\\\
-            0           & 0             & 0 & 1
-            \\end{bmatrix}
-            \\cdot
-            \\begin{bmatrix}
-            cos \\psi   & 0 & sin \\psi & 0 \\\\
-            0           & 1 & 0         & 0 \\\\
-            - sin \\psi & 0 & cos \\psi & 0 \\\\
-            0           & 0 & 0           & 1
-            \\end{bmatrix}
-            \\cdot
-            \\begin{bmatrix}
-            1 & 0           & 0           & 0 \\\\
-            0 & cos \\phi   & - sin \\phi & 0 \\\\
-            0 & sin \\phi   & cos \\phi   & 0 \\\\
-            0 & 0           & 0           & 1
-            \\end{bmatrix}
-            \\cdot
-            \\begin{bmatrix} x' \\\\ y' \\\\ z' \\\\ 1 \\end{bmatrix}
 
         Returns
         -------
@@ -76,15 +50,10 @@ class TransformationType(BaseModel):
             Shape :math:`(4, 4)`
 
         """
-        R = pr.active_matrix_from_extrinsic_euler_xyz(
-            e=np.deg2rad(self.rotation)
-        )
-        return self._round(
-            pt.transform_from(
-                R=R,
-                p=np.zeros((3,)),
-            )
-        )
+        phi, psi, theta = self.rotation
+        r_x, r_y, r_z = R_x(phi), R_y(psi), R_z(theta)
+
+        return self._round(np.matmul(r_z, np.matmul(r_y, r_x)))
 
     @property
     def scale_matrix(self) -> np.ndarray:
@@ -109,10 +78,7 @@ class TransformationType(BaseModel):
 
         """
         return self._round(
-            pt.transform_from(
-                R=np.diag(self.scale),
-                p=np.zeros((3,)),
-            )
+            np.vstack((np.diag(self.scale), np.array((0, 0, 0, 1)))).T
         )
 
     @property
@@ -138,10 +104,7 @@ class TransformationType(BaseModel):
 
         """
         return self._round(
-            pt.transform_from(
-                R=np.eye(3),
-                p=self.translation,
-            )
+            np.vstack((np.eye(3, 4), np.array((*self.translation, 1)))).T
         )
 
     @property
@@ -174,102 +137,6 @@ class TransformationType(BaseModel):
             ),
         )
 
-    @staticmethod
-    @validate_arguments
-    def mirror_matrix(plane: Literal['xy', 'yz', 'xz']) -> np.ndarray:
-        """Returns transformation matrices for symmetric objects.
-
-        .. math::
-
-            A_{xy} = diag(1, 1, -1, 1) \\\\
-            A_{yz} = diag(-1, 1, 1, 1) \\\\
-            A_{xz} = diag(1, -1, 1, 1)
-
-        Parameters
-        ----------
-        plane : Literal['xy', 'yz', 'xz']
-            The symmetry plane.
-
-        Returns
-        -------
-        np.ndarray
-            Shape :math:`(4, 4)`
-
-        """
-        diags = {
-            'xy': (1, 1, -1, 1),
-            'yz': (-1, 1, 1, 1),
-            'xz': (1, -1, 1, 1),
-        }
-
-        return np.diag(diags[plane])
-
-    @staticmethod
-    @validate_arguments
-    def shear_matrix(
-        plane: Literal['xy', 'yz', 'xz'],
-        a: float | None = 0.0,
-        b: float | None = 0.0,
-    ) -> np.ndarray:
-        """Returns the shear matrices for symmetric objects.
-
-        .. math::
-
-            S_{xy} =
-            \\begin{bmatrix}
-            1 & 0 & a & 0 \\\\
-            0 & 1 & b & 0 \\\\
-            0 & 0 & 1 & 0 \\\\
-            0 & 0 & 0 & 1
-            \\end{bmatrix}
-            \\\\
-            S_{yz} =
-            \\begin{bmatrix}
-            1 & 0 & 0 & 0 \\\\
-            a & 1 & 0 & 0 \\\\
-            b & 0 & 1 & 0 \\\\
-            0 & 0 & 0 & 1
-            \\end{bmatrix}
-            \\\\
-            S_{xz} =
-            \\begin{bmatrix}
-            1 & a & 0 & 0 \\\\
-            0 & 1 & 0 & 0 \\\\
-            0 & b & 1 & 0 \\\\
-            0 & 0 & 0 & 1
-            \\end{bmatrix}
-            \\\\
-            \\begin{bmatrix} x \\\\ y \\\\ z \\\\ 1 \\end{bmatrix} =
-            S_{ab} \\cdot
-            \\begin{bmatrix} x' \\\\ y' \\\\ z' \\\\ 1 \\end{bmatrix}
-
-        Parameters
-        ----------
-        plane : Literal['xy', 'yz', 'xz']
-            The symmetry plane.
-        a : float
-            Shear value of the first axis.
-        b : float
-            Shear value of the second axis.
-
-        Returns
-        -------
-        np.ndarray
-            Shape :math:`(4, 4)`
-
-        """
-        id_a_b = {
-            'xy': ((0, 2), (1, 2)),
-            'yz': ((1, 0), (2, 0)),
-            'xz': ((0, 1), (2, 1)),
-        }
-        id_a, id_b = id_a_b[plane]
-
-        A = np.eye(4)
-        A[id_a], A[id_b] = a, b
-
-        return A
-
     @classmethod
     def _round(cls, arr: np.ndarray) -> np.ndarray:
         return np.round(arr, cls.PRECISION)
@@ -298,6 +165,275 @@ def transform_array(A: np.ndarray, coords: np.ndarray) -> np.ndarray:
 
     """
     return np.matmul(A, coords)
+
+
+@validate_arguments
+def R_x(angle: float) -> np.ndarray:
+    """Rotation matrix around the x-axis.
+
+    .. math::
+
+        R_x =
+        \\begin{bmatrix}
+        1 & 0           & 0           & 0 \\\\
+        0 & cos \\phi   & - sin \\phi & 0 \\\\
+        0 & sin \\phi   & cos \\phi   & 0 \\\\
+        0 & 0           & 0           & 1
+        \\end{bmatrix}
+
+    Parameters
+    ----------
+    angle : float
+        Rotation angle :math:`\\phi` in degrees.
+
+    Returns
+    -------
+    np.ndarray
+        Shape :math:`(4, 4)`
+    """
+    phi = np.radians(angle)
+
+    return np.array((
+        (1, 0, 0, 0),
+        (0, np.cos(phi), - np.sin(phi), 0),
+        (0, np.sin(phi), np.cos(phi)),
+        (0, 0, 0, 1)
+    ))
+
+
+@validate_arguments
+def R_y(angle: float) -> np.ndarray:
+    """Rotation matrix around the y-axis.
+
+    .. math::
+
+        R_y =
+        \\begin{bmatrix}
+        cos \\psi   & 0 & sin \\psi & 0 \\\\
+        0           & 1 & 0         & 0 \\\\
+        - sin \\psi & 0 & cos \\psi & 0 \\\\
+        0           & 0 & 0           & 1
+        \\end{bmatrix}
+
+    Parameters
+    ----------
+    angle : float
+        Rotation angle :math:`\\psi` in degrees.
+
+    Returns
+    -------
+    np.ndarray
+        Shape :math:`(4, 4)`
+    """
+    psi = np.radians(angle)
+
+    return np.array((
+        (np.cos(psi), 0, np.sin(psi), 0),
+        (0, 1, 0, 0),
+        (-np.sin(psi), 0, np.cos(psi), 0),
+        (0, 0, 0, 1)
+    ))
+
+
+@validate_arguments
+def R_z(angle: float) -> np.ndarray:
+    """Rotation matrix around the z-axis.
+
+    .. math::
+
+        R_z =
+        \\begin{bmatrix}
+        cos \\theta & - sin \\theta & 0 & 0 \\\\
+        sin \\theta & cos \\theta   & 0 & 0 \\\\
+        0           & 0             & 1 & 0 \\\\
+        0           & 0             & 0 & 1
+        \\end{bmatrix}
+
+    Parameters
+    ----------
+    angle : float
+        Rotation angle :math:`\\theta` in degrees.
+
+    Returns
+    -------
+    np.ndarray
+        Shape :math:`(4, 4)`
+    """
+    theta = np.radians(angle)
+
+    return np.array((
+        (np.cos(theta), -np.sin(theta), 0, 0),
+        (np.sin(theta), np.cos(theta), 0, 0),
+        (0, 0, 1, 0),
+        (0, 0, 0, 1),
+    ))
+
+
+def _shear_matrix(
+    plane: Literal['xy', 'yz', 'xz'],
+    a: float | None = 0.0,
+    b: float | None = 0.0,
+) -> np.ndarray:
+    """Returns the shear matrices.
+
+    .. math::
+
+        \\begin{bmatrix} x \\\\ y \\\\ z \\\\ 1 \\end{bmatrix} =
+        S_{ab} \\cdot
+        \\begin{bmatrix} x' \\\\ y' \\\\ z' \\\\ 1 \\end{bmatrix}
+
+    Parameters
+    ----------
+    plane : Literal['xy', 'yz', 'xz']
+        The symmetry plane.
+    a : float
+        Shear value of the first axis.
+    b : float
+        Shear value of the second axis.
+
+    Returns
+    -------
+    np.ndarray
+        Shape :math:`(4, 4)`
+
+    """
+    id_a_b = {
+        'xy': ((0, 2), (1, 2)),
+        'yz': ((1, 0), (2, 0)),
+        'xz': ((0, 1), (2, 1)),
+    }
+    id_a, id_b = id_a_b[plane]
+
+    A = np.eye(4)
+    A[id_a], A[id_b] = a, b
+
+    return A
+
+
+@validate_arguments
+def S_xy(alpha: float, beta: float) -> np.ndarray:
+    """Rotation matrix around the xy-plane.
+
+    .. math::
+
+        S_{xy} =
+        \\begin{bmatrix}
+        1 & 0 & \\alpha & 0 \\\\
+        0 & 1 & \\beta & 0 \\\\
+        0 & 0 & 1 & 0 \\\\
+        0 & 0 & 0 & 1
+        \\end{bmatrix}
+
+    Parameters
+    ----------
+    alpha : float
+        Shear angle :math:`\\alpha` along the x-axis in degrees.
+    beta : float
+        Shear angle :math:`\\beta` along the y-axis in degrees.
+
+
+    Returns
+    -------
+    np.ndarray
+        Shape :math:`(4, 4)`
+    """
+    alpha, beta = np.radians(alpha), np.radians(beta)
+
+    return _shear_matrix('yx', alpha, beta)
+
+
+@validate_arguments
+def S_yz(alpha: float, beta: float) -> np.ndarray:
+    """Rotation matrix around the xy-plane.
+
+    .. math::
+
+        S_{yz} =
+        \\begin{bmatrix}
+        1 & 0 & 0 & 0 \\\\
+        \\alpha & 1 & 0 & 0 \\\\
+        \\beta & 0 & 1 & 0 \\\\
+        0 & 0 & 0 & 1
+        \\end{bmatrix}
+
+    Parameters
+    ----------
+    alpha : float
+        Shear angle :math:`\\alpha` along the y-axis in degrees.
+    beta : float
+        Shear angle :math:`\\beta` along the z-axis in degrees.
+
+
+    Returns
+    -------
+    np.ndarray
+        Shape :math:`(4, 4)`
+    """
+    alpha, beta = np.radians(alpha), np.radians(beta)
+
+    return _shear_matrix('yz', alpha, beta)
+
+
+@validate_arguments
+def S_xz(alpha: float, beta: float) -> np.ndarray:
+    """Rotation matrix around the xy-plane.
+
+    .. math::
+
+        S_{xz} =
+        \\begin{bmatrix}
+        1 & \\alpha & 0 & 0 \\\\
+        0 & 1 & 0 & 0 \\\\
+        0 & \\beta & 1 & 0 \\\\
+        0 & 0 & 0 & 1
+        \\end{bmatrix}
+
+    Parameters
+    ----------
+    alpha : float
+        Shear angle :math:`\\alpha` along the x-axis in degrees.
+    beta : float
+        Shear angle :math:`\\beta` along the z-axis in degrees.
+
+
+    Returns
+    -------
+    np.ndarray
+        Shape :math:`(4, 4)`
+    """
+    alpha, beta = np.radians(alpha), np.radians(beta)
+
+    return _shear_matrix('xz', alpha, beta)
+
+
+@validate_arguments
+def mirror_matrix(plane: Literal['xy', 'yz', 'xz']) -> np.ndarray:
+    """Returns transformation matrices for symmetric objects.
+
+    .. math::
+
+        A_{xy} = diag(1, 1, -1, 1) \\\\
+        A_{yz} = diag(-1, 1, 1, 1) \\\\
+        A_{xz} = diag(1, -1, 1, 1)
+
+    Parameters
+    ----------
+    plane : Literal['xy', 'yz', 'xz']
+        The symmetry plane.
+
+    Returns
+    -------
+    np.ndarray
+        Shape :math:`(4, 4)`
+
+    """
+    diags = {
+        'xy': (1, 1, -1, 1),
+        'yz': (-1, 1, 1, 1),
+        'xz': (1, -1, 1, 1),
+    }
+
+    return np.diag(diags[plane])
 
 
 # Some expressoions that are used occasionally and therfore get an alias
