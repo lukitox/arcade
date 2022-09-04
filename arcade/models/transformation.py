@@ -14,7 +14,7 @@ class TransformationType(BaseModel):
     Parameters
     ----------
     PRECISION : ClassVar[int]
-        Floating point precision of the transformation matrices, by default `5`.
+        Floating point precision of the transformation matrices, by default `5`
     """
     PRECISION: ClassVar[int] = 5
 
@@ -36,8 +36,8 @@ class TransformationType(BaseModel):
 
     @property
     def rotation_matrix(self) -> np.ndarray:
-        """Rotation matrix of shape `(4, 4)`. The rotation matrix is constructed
-        with extrinsic euler rotation in (x, y, z)-order.
+        """Rotation matrix of shape `(4, 4)`. The rotation matrix is
+        constructed with extrinsic euler rotation in (x, y, z)-order.
 
         .. math::
 
@@ -76,7 +76,7 @@ class TransformationType(BaseModel):
             Shape :math:`(4, 4)`
 
         """
-        R =  pr.active_matrix_from_extrinsic_euler_xyz(
+        R = pr.active_matrix_from_extrinsic_euler_xyz(
             e=np.deg2rad(self.rotation)
         )
         return self._round(
@@ -207,7 +207,9 @@ class TransformationType(BaseModel):
     @staticmethod
     @validate_arguments
     def shear_matrix(
-        plane: Literal['xy', 'yz', 'xz'], a: float, b: float,
+        plane: Literal['xy', 'yz', 'xz'],
+        a: float | None = 0.0,
+        b: float | None = 0.0,
     ) -> np.ndarray:
         """Returns the shear matrices for symmetric objects.
 
