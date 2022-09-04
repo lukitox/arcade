@@ -6,6 +6,7 @@ from scipy.interpolate import interp1d
 
 from arcade.models.types import SpatialPointType
 from arcade.models.util import unit_spacing, SPACINGS
+from arcade.models.types import Naca4DigitType, SpatialPointType, UidType
 
 from arcade.models.profiles.profile import TypeOfProfileType, PointListType
 
@@ -69,7 +70,7 @@ class AirfoilType(TypeOfProfileType):
 
 class NacaAirfoilType(AirfoilType):
     """NACA 4-Series airfoil type."""
-    number: constr(regex='^[0-9]{4}$') = Field(
+    number: Naca4DigitType = Field(
         ...,
         description='The NACA 4-digit number.'
     )

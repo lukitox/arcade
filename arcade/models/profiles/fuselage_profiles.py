@@ -58,14 +58,16 @@ class RectangleProfileType(StandardProfileType):
             if length < lens[0]:
                 return (0, length, height / 2, 1)
             elif length < lens[1]:
-                l = length - lens[0]
-                return (0, a + np.sin(l / r) * r, b / 2 + np.cos(l / r) * r, 1)
+                s = length - lens[0]
+                return (0, a + np.sin(s / r) * r, b / 2 + np.cos(s / r) * r, 1)
             elif length < lens[2]:
-                l = length - lens[1]
-                return (0, half_width, b / 2 - l, 1)
+                s = length - lens[1]
+                return (0, half_width, b / 2 - s, 1)
             elif length < lens[3]:
-                l = length - lens[2]
-                return (0, a + np.cos(l / r) * r, -b / 2 - np.sin(l / r) * r, 1)
+                s = length - lens[2]
+                return (
+                    0, a + np.cos(s / r) * r, -b / 2 - np.sin(s / r) * r, 1
+                )
             elif length <= lens[4]:
                 return (0, lens[4] - length, - height / 2, 1)
             raise ValueError('Length too long')

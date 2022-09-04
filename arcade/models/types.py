@@ -21,6 +21,10 @@ UidType = constr(
 """Unique ID type: a string with some constrictions."""
 
 
+Naca4DigitType = constr(regex='^[0-9]{4}$')
+"""Naca 4 digit airfoil number."""
+
+
 class PointType(NamedTuple):
     """3-D point type, inherits from `NamedTuple`, and can therefore either be
     accesed via its attributes (x, y, z) or its indices (0, 1, 2).
