@@ -21,7 +21,7 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
 
-import arcade
+import arcade  # noqa
 
 # -- General configuration ---------------------------------------------
 
@@ -35,6 +35,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
     'sphinxcontrib.autodoc_pydantic',
+    'sphinxcontrib.mermaid',
     'sphinx.ext.napoleon',
 ]
 
@@ -54,7 +55,7 @@ autodoc_default_options = {
 # autodoc-pydantic options
 autodoc_pydantic_model_show_config_summary = False
 # autodoc_member_order = "groupwise"
-autodoc_pydantic_model_hide_paramlist = False
+autodoc_pydantic_model_hide_paramlist = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -121,8 +122,8 @@ html_theme_options = {
             "url": "https://github.com/lukitox/arcade",
             "icon": "fab fa-github-square",
             "type": "fontawesome",
-        }
-   ]
+        },
+    ],
 }
 html_title = 'arcade'
 

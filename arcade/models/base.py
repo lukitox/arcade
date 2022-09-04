@@ -1,3 +1,20 @@
+"""Foo.
+
+.. mermaid::
+
+    classDiagram
+    AbstractModelType <|-- ModelType
+    AbstractModelType <|-- OriginModelType
+    OriginModelType <|-- SpatialModelType
+
+    class AbstractModelType{
+        +UidType uid
+        +str name
+        +str description
+        ~bool STRICT
+    }
+
+"""
 from abc import ABC
 from typing import ClassVar
 from warnings import warn
@@ -33,7 +50,7 @@ class AbstractModelType(BaseModel, ABC):
     @validator('uid')
     def uid_is_unique(cls, uid):
         """Ensures that the entered uid is not already taken."""
-        if not uid in cls._UID:  # new object
+        if uid not in cls._UID:  # new object
             return uid
         if cls._UID[uid]() is None:  # key exists, but value is dead weakref
             return uid
@@ -45,13 +62,13 @@ class AbstractModelType(BaseModel, ABC):
 
 
 class ModelType(AbstractModelType):
-   pass
+    pass
 
 
 class OriginModelType(AbstractModelType):
-    """This is the abstract entry type to an :mod:`arcade`- model. It represents
-    the object provididing the global coordinate system. Therefore it has no
-    further dependenices on other types.
+    """This is the abstract entry type to an :mod:`arcade`- model. It
+    represents the object provididing the global coordinate system. Therefore
+    it has no further dependenices on other types.
 
     Attributes
     ----------
@@ -77,8 +94,8 @@ class SpatialModelType(OriginModelType, ModelType):
         ...,
         description=(
             "Uid of the object this one's coordinate system depends on. The "
-            + "corresponding transformation is assigned to the `transformation`"
-            + " attribute."
+            + "corresponding transformation is assigned to the "
+            + "`transformation` attribute."
         ),
     )
     transformation: TransformationType | None = Field(

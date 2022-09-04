@@ -12,7 +12,8 @@ from arcade.models.util import SPACINGS, unit_spacing
 
 class AirfoilType(TypeOfProfileType):
     """Aerodynamic airfoil. The airfoil's coordinates are defined in the
-    :math:`(x, z)`-plane, ordered from the trailing edge around the top."""
+    :math:`(x, z)`-plane, ordered from the trailing edge around the top and
+    back."""
 
     @property
     def top(self) -> np.ndarray:
@@ -194,7 +195,8 @@ class AirfoilType(TypeOfProfileType):
 
 class NacaAirfoilType(AirfoilType):
     """NACA 4-Series airfoil type. The airfoil's coordinates are defined in the
-    :math:`(x, z)`-plane, ordered from the trailing edge around the top."""
+    :math:`(x, z)`-plane, ordered from the trailing edge around the top and
+    back."""
     number: Naca4DigitType = Field(
         ...,
         description='The NACA 4-digit number.'
@@ -311,7 +313,7 @@ class NacaAirfoilType(AirfoilType):
     @property
     def coords(self) -> np.ndarray:
         """Returns the airfoil coordinates, ordered from the trailing edge
-        around the top.
+        around the top and back.
 
         Returns
         -------
@@ -330,7 +332,8 @@ class NacaAirfoilType(AirfoilType):
 
 class PointListAirfoilType(AirfoilType, PointListType, ModelType):
     """Airfoil defined by a . The airfoil's coordinates are defined in the
-    :math:`(x, z)`-plane, ordered from the trailing edge around the top."""
+    :math:`(x, z)`-plane, ordered from the trailing edge around the top and
+    back."""
 
     @classmethod
     def from_file(cls, path: str, skiprows: int = 1, **kwargs):
@@ -348,8 +351,8 @@ class PointListAirfoilType(AirfoilType, PointListType, ModelType):
 
         Returns
         -------
-        _type_
-            _description_
+        PointListAirfoilType
+
         """
         x, z = np.loadtxt(path, skiprows=skiprows).T
         y = np.zeros_like(x)

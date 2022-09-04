@@ -37,6 +37,14 @@ arcade.models.types module
    :undoc-members:
    :show-inheritance:
 
+arcade.models.util module
+-------------------------
+
+.. automodule:: arcade.models.util
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 
