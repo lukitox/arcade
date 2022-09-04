@@ -1,17 +1,50 @@
 import numpy as np
-from pydantic import conlist, Field
+from pydantic import conlist, Field, PositiveFloat
 
 import arcade.models.transformation as tm
 from arcade.models.base import ModelType, SpatialModelType
-from arcade.models.types import SymmetryType, UidType
+from arcade.models.types import BaseModel, SymmetryType, UidType
 
 
 class ComponentSegmentType(ModelType):
     pass
 
 
-class PositioningType(ModelType):
-    pass
+class PositioningType(BaseModel):
+    from_section_uid: UidType = Field(
+        ...,
+        description="Reference to starting section of the positioning vector."
+    )
+    to_section_uid: UidType = Field(
+        ...,
+        description=(
+            "Reference to ending section (section to be positioned) of the "
+            + "positioning vector."
+        ),
+    )
+    length: PositiveFloat = Field(
+        0.0,
+        description=(
+            "Distance between inner and outer section (length of the "
+            + "positioning vector)."
+        ),
+    )
+    dihedral_angle: PositiveFloat = Field(
+        0.0,
+        description=(
+            "Dihedralangle between inner and outer section. This angle equals "
+            + "a positive rotation of the positioing vector around the x-axis "
+            + "of the wing coordinate system. The angle is defined in degrees."
+        ),
+    )
+    sweep_angle: PositiveFloat = Field(
+        0.0,
+        description=(
+            "Sweep angle between inner and outer section. This angle equals a "
+            + "shearing of the positioing vector along the x-axis of the wing "
+            + "coordinate system. The angle is defined in degrees."
+        ),
+    )
 
 
 class WingElementType(SpatialModelType):
