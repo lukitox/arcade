@@ -16,7 +16,7 @@ class TypeOfProfileType(BaseModel, ABC):
 
 
 class PointListType(TypeOfProfileType):
-    point_list: conlist(SpatialPointType, min_items=2)
+    point_list: conlist(SpatialPointType, min_items=2) = Field(..., repr=False)
 
     @property
     def coords(self) -> np.ndarray:

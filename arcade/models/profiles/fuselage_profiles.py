@@ -54,7 +54,7 @@ class RectangleProfileType(StandardProfileType):
         arc = np.pi * r / 2
         lens = np.cumsum((a, arc, b, arc, a))
 
-        def coords(length: float):
+        def coords(length: float) -> tuple[float, float, float, float]:
             if length < lens[0]:
                 return (0, length, height / 2, 1)
             elif length < lens[1]:
