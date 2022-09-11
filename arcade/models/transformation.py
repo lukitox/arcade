@@ -78,8 +78,10 @@ class TransformationType(BaseModel):
 
         """
         return self._round(
-            np.vstack((np.diag(self.scale), np.array((0, 0, 0, 1)))).T
-        )
+            np.vstack(
+                (np.diag((*self.scale, 1))[:-1, :], np.array((0, 0, 0, 1)))
+            )
+        ).T
 
     @property
     def translation_matrix(self) -> np.ndarray:
@@ -196,7 +198,7 @@ def R_x(angle: float) -> np.ndarray:
     return np.array((
         (1, 0, 0, 0),
         (0, np.cos(phi), - np.sin(phi), 0),
-        (0, np.sin(phi), np.cos(phi)),
+        (0, np.sin(phi), np.cos(phi), 0),
         (0, 0, 0, 1)
     ))
 
@@ -305,7 +307,7 @@ def _shear_matrix(
     id_a, id_b = id_a_b[plane]
 
     A = np.eye(4)
-    A[id_a], A[id_b] = a, b
+    A[id_a], A[id_b] = np.sin(a), np.sin(b)
 
     return A
 
@@ -339,7 +341,7 @@ def S_xy(alpha: float, beta: float) -> np.ndarray:
     """
     alpha, beta = np.radians(alpha), np.radians(beta)
 
-    return _shear_matrix('yx', alpha, beta)
+    return _shear_matrix('xy', alpha, beta)
 
 
 @validate_arguments

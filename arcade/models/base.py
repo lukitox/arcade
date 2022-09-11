@@ -118,7 +118,7 @@ class SpatialModelType(OriginModelType, ModelType):
             self.transformation.matrix
         )
 
-    @validator('parent')
+    # @validator('parent')
     def uid_exists(cls, uid):
         """Ensures that the uid exists."""
         if uid in cls._UID:
