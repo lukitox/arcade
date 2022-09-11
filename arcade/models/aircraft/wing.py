@@ -23,7 +23,7 @@ class PositioningType(BaseModel):
             + "positioning vector)."
         ),
     )
-    dihedral_angle: float = Field(
+    dihedral: float = Field(
         0.0,
         description=(
             "Dihedralangle between inner and outer section. This angle equals "
@@ -31,7 +31,7 @@ class PositioningType(BaseModel):
             + "of the wing coordinate system. The angle is defined in degrees."
         ),
     )
-    sweep_angle: float = Field(
+    sweep: float = Field(
         0.0,
         description=(
             "Sweep angle between inner and outer section. This angle equals a "
@@ -49,7 +49,7 @@ class PositioningType(BaseModel):
         np.ndarray
             Shape :math:`(4, 4)`
         """
-        return tm.R_x(angle=self.dihedral_angle)
+        return tm.R_x(angle=self.dihedral)
 
     @property
     def sweep_matrix(self) -> np.ndarray:
@@ -60,7 +60,7 @@ class PositioningType(BaseModel):
         np.ndarray
             Shape :math:`(4, 4)`
         """
-        return tm.S_xz(alpha=self.sweep_angle, beta=0.0)
+        return tm.S_xz(alpha=self.sweep, beta=0.0)
 
     @property
     def translation_matrix(self) -> np.ndarray:
