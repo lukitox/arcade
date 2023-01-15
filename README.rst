@@ -2,25 +2,10 @@
 AiRCrAft DEsign
 ===============
 
-
-.. image:: https://img.shields.io/pypi/v/arcade.svg
-        :target: https://pypi.python.org/pypi/arcade
-
-.. image:: https://img.shields.io/travis/lukitox/arcade.svg
-        :target: https://travis-ci.com/lukitox/arcade
-
-.. image:: https://readthedocs.org/projects/arcade/badge/?version=latest
-        :target: https://arcade.readthedocs.io/en/latest/?version=latest
-        :alt: Documentation Status
-
-
-
-
 Describe aircraft configurations parametrically with pydantic.
 
 
 * Free software: GNU General Public License v3
-* Documentation: https://arcade.readthedocs.io.
 
 
 Features
